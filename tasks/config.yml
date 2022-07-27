@@ -1,0 +1,73 @@
+---
+
+- name: HAPROXY | Copy config to /tmp/
+  template:
+    src: "{{ haproxy_conf_file }}.j2"
+    dest: "/tmp/{{ haproxy_conf_file }}"
+    owner: root
+    mode: 0640
+  changed_when: false
+  tags: haproxy_config
+
+- name: HAPROXY | Update config with custom config files in /tmp/
+  blockinfile:
+    dest: "/tmp/{{ haproxy_conf_file }}"
+    content: "{{ lookup('template', item) }}"
+    insertafter: "EOF"
+    marker: ''
+    owner: root
+    mode: 0640
+  with_fileglob: "{{ haproxy_custom_template_path }}/*.j2"
+  changed_when: false
+  tags: haproxy_config
+
+- name: HAPROXY | Copy final config to "{{ haproxy_conf_path }}"
+  copy:
+    src: "/tmp/{{ haproxy_conf_file }}"
+    dest: "{{ haproxy_conf_path }}/{{ haproxy_conf_file }}"
+    remote_src: true
+    owner: "{{ haproxy_user }}"
+    group: "{{ haproxy_group }}"
+    mode: 0640
+  tags: haproxy_config
+  notify:
+    - reload haproxy
+
+- name: HAPROXY | Copy errors config
+  template:
+    src: "{{ item }}"
+    dest: "{{ haproxy_conf_path }}/errors/{{ item | basename | splitext | first }}"
+    owner: "{{ haproxy_user }}"
+    group: "{{ haproxy_group }}"
+    mode: 0640
+  with_fileglob: "{{ haproxy_conf_errors_template_path }}/*.j2"
+  notify:
+    - reload haproxy
+  tags: haproxy_config
+
+- name: HAPROXY | Copy logrotate config
+  template:
+    src: "{{ haproxy_logrotate_template_path }}"
+    dest: /etc/logrotate.d/haproxy
+    mode: 0644
+    owner: root
+    group: root
+  when: haproxy_logrotate_enabled
+  tags: haproxy_config
+
+- name: HAPROXY | Check if /etc/rsyslog.d exists
+  stat:
+    path: /etc/rsyslog.d
+  register: etc_rsyslogd
+
+- name: HAPROXY | Copy rsyslog config file
+  template:
+    src: haproxy-rsyslog.conf.j2
+    dest: "/etc/rsyslog.d/{{ haproxy_rsyslog_file }}"
+    mode: 0644
+    owner: root
+    group: root
+  when: haproxy_rsyslog_enable and etc_rsyslogd.stat.exists
+  notify:
+    - reload haproxy
+  tags: haproxy_config

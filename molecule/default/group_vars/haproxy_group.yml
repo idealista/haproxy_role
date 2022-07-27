@@ -1,0 +1,27 @@
+---
+
+# Variables for template stats.cfg.j2
+haproxy_stats_name: "stats"
+haproxy_stats_listen_interface: "*"
+haproxy_stats_listen_port: 8080
+haproxy_stats_uri: "/admin?stats"
+haproxy_stats_user: "admin"
+haproxy_stats_password: "thisshouldbeinavault"
+
+# Variables for template listen-app.cfg.j2
+haproxy_app_name: "custom-app"
+haproxy_app_listen_interface: "*"
+haproxy_app_listen_port: 80
+haproxy_app_servers:
+  server1:
+    ip: "100.46.64.71"
+    port: 9000
+    check: "check"
+  server2:
+    ip: "100.46.64.72"
+    port: 9000
+    check: "check"
+  server3:
+    ip: "100.46.64.73"
+    port: 9000
+    check: "check"

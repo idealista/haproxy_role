@@ -1,0 +1,112 @@
+---
+
+- name: HAPROXY | Ensure haproxy group
+  group:
+    name: "{{ haproxy_group }}"
+    system: yes
+    state: present
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Ensure haproxy user
+  user:
+    name: "{{ haproxy_user }}"
+    group: "{{ haproxy_group }}"
+    system: yes
+    shell: "{{ haproxy_user_shell }}"
+    createhome: no
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Ensure skeleton paths
+  file:
+    dest: "{{ item }}"
+    owner: "{{ haproxy_user }}"
+    group: "{{ haproxy_group }}"
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ haproxy_skeleton_paths }}"
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Ensure skeleton log paths
+  file:
+    dest: "{{ haproxy_log_path }}"
+    owner: "{{ haproxy_user }}"
+    group: "{{ haproxy_group }}"
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ haproxy_skeleton_log_paths }}"
+  when: haproxy_log_file is defined
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Install system dependencies
+  apt:
+    name: "{{ haproxy_system_dependencies }}"
+    state: present
+    update_cache: true
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Check haproxy version
+  command: "{{ haproxy_exec_name }} -v"
+  register: haproxy_check
+  changed_when: false
+  ignore_errors: true
+  check_mode: no
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Download package
+  get_url:
+    url: "{{ haproxy_url }}"
+    dest: "{{ haproxy_package_path }}"
+  when: haproxy_force_reinstall or haproxy_check is failed or haproxy_version not in haproxy_check.stderr
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Extract downloaded package
+  unarchive:
+    src: "{{ haproxy_package_path }}"
+    dest: "{{ haproxy_download_path }}"
+    remote_src: True
+  when: haproxy_force_reinstall or haproxy_check is failed or haproxy_version  not in haproxy_check.stderr
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Compile binary
+  make:
+    chdir: "{{ haproxy_download_path }}/haproxy-{{ haproxy_version }}"
+    params: "{{ haproxy_compiling_params }}"
+  changed_when: false
+  when: haproxy_force_reinstall or haproxy_check is failed or haproxy_version  not in haproxy_check.stderr
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Copy binary
+  copy:
+    src: "{{ haproxy_src_bin }}"
+    dest: "{{ haproxy_bin_path }}/{{ haproxy_exec_name }}"
+    owner: "{{ haproxy_user }}"
+    group: "{{ haproxy_group }}"
+    remote_src: True
+    mode: 0755
+  when: haproxy_force_reinstall or haproxy_check is failed or haproxy_version not in haproxy_check.stderr
+  tags:
+    - haproxy_install
+  notify:
+    - restart haproxy
+
+- name: HAPROXY | Link binary
+  file:
+    src: "{{ haproxy_bin_path }}/{{ haproxy_exec_name }}"
+    dest: "/usr/bin/{{ haproxy_exec_name }}"
+    state: link
+  when: haproxy_force_reinstall or haproxy_check is failed or haproxy_version not in haproxy_check.stderr
+  tags:
+    - haproxy_install
+  notify:
+    - restart haproxy

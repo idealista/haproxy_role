@@ -1,0 +1,21 @@
+---
+
+- name: HAPROXY | Copy Daemon script
+  template:
+    src: haproxy.service.j2
+    dest: /etc/systemd/system/haproxy.service
+    mode: 0644
+    owner: root
+    group: root
+  notify: restart haproxy
+  tags:
+    - haproxy_service
+
+- name: HAPROXY | Configure service
+  systemd:
+    name: haproxy
+    state: "{{ haproxy_service_state }}"
+    enabled: "{{ haproxy_service_enabled }}"
+    daemon_reload: yes
+  tags:
+    - haproxy_service
