@@ -1,0 +1,40 @@
+{{ ansible_managed | comment }}
+[Unit]
+Description={{ haproxy_service_description }}
+Documentation={{ haproxy_documentation_link }}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+{% for env_file in haproxy_env_files %}
+EnvironmentFile=-{{ env_file }}
+{% endfor %}
+Environment="CONFIG={{ haproxy_conf_path }}/{{ haproxy_conf_file }}" "PIDFILE={{ haproxy_pid_file }}" "EXTRAOPTS={% for option in haproxy_env_options %}{% if option %}{{ option }} {% endif %}{% endfor %}"
+ExecStart={{ haproxy_bin_path }}/{{ haproxy_exec_name }} -Ws -f $CONFIG -p $PIDFILE $EXTRAOPTS
+ExecReload={{ haproxy_bin_path }}/{{ haproxy_exec_name }} -Ws -f $CONFIG -c -q $EXTRAOPTS
+ExecReload=/bin/kill -USR2 $MAINPID
+KillMode=mixed
+Restart=always
+SuccessExitStatus={{ haproxy_success_exit_status }}
+Type=notify
+
+# The following lines leverage SystemD's sandboxing options to provide
+# defense in depth protection at the expense of restricting some flexibility
+# in your setup (e.g. placement of your configuration files) or possibly
+# reduced performance. See systemd.service(5) and systemd.exec(5) for further
+# information.
+
+# NoNewPrivileges=true
+# ProtectHome=true
+# If you want to use 'ProtectSystem=strict' you should whitelist the PIDFILE,
+# any state files and any other files written using 'ReadWritePaths' or
+# 'RuntimeDirectory'.
+# ProtectSystem=true
+# ProtectKernelTunables=true
+# ProtectKernelModules=true
+# ProtectControlGroups=true
+# If your SystemD version supports them, you can add: @reboot, @swap, @sync
+# SystemCallFilter=~@cpu-emulation @keyring @module @obsolete @raw-io
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+---
+- name: Converge
+  hosts: haproxy_group
+  roles:
+    - role: haproxy_role

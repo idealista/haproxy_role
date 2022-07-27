@@ -1,0 +1,10 @@
+{{ haproxy_log_path }}.log {
+        daily
+        maxsize 1G
+        rotate 10
+        compress
+        copytruncate
+        missingok
+        notifempty
+        create 644 {{ haproxy_user }} {{ haproxy_group }}
+}

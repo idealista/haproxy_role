@@ -1,0 +1,26 @@
+---
+
+file:
+  {{ haproxy_conf_path }}/{{ haproxy_conf_file }}:
+    exists: true
+    filetype: file
+    owner: {{ haproxy_user }}
+    group: {{ haproxy_group }}
+{% for item in haproxy_skeleton_paths + haproxy_skeleton_log_paths %}
+  {{ item }}:
+    exists: true
+    owner: {{ haproxy_user }}
+    group: {{ haproxy_group }}
+    filetype: directory
+{% endfor %}
+
+service:
+  haproxy:
+    enabled: true
+    running: true
+
+port:
+  tcp:{{ haproxy_stats_listen_port }}:
+    listening: true
+  tcp:{{ haproxy_app_listen_port }}:
+    listening: true

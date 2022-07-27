@@ -1,0 +1,8 @@
+{{ ansible_managed | comment }}
+$AddUnixListenSocket {{ haproxy_var_lib_dev_path }}/log
+
+# Send HAProxy messages to a dedicated logfile
+:programname, startswith, "haproxy" {
+  {{ haproxy_log_file }}
+  stop
+}
