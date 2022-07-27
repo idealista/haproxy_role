@@ -1,0 +1,9 @@
+listen  {{ haproxy_app_name }}
+        bind {{ haproxy_app_listen_interface }}:{{ haproxy_app_listen_port }}
+        mode http
+        timeout client 15s
+        balance roundrobin
+{% for server, params in haproxy_app_servers.items() %}
+        server {{ server }} {{ params.ip }}:{{ params.port }} {{ params.check }}
+{% endfor %}
+

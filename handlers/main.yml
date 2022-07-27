@@ -1,0 +1,13 @@
+---
+
+- name: restart haproxy
+  systemd:
+    name: haproxy
+    state: restarted
+  when: haproxy_service_state != 'stopped'
+
+- name: reload haproxy
+  systemd:
+    name: haproxy
+    state: reloaded
+  when: haproxy_service_state != 'stopped'

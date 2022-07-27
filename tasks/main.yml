@@ -1,0 +1,16 @@
+---
+
+- name: HAPROXY | Install
+  import_tasks: install.yml
+  tags:
+    - haproxy_install
+
+- name: HAPROXY | Configure
+  import_tasks: config.yml
+  tags:
+    - haproxy_configure
+
+- name: HAPROXY | Service
+  import_tasks: service.yml
+  tags:
+    - haproxy_service

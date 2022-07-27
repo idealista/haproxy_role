@@ -1,0 +1,15 @@
+---
+
+galaxy_info:
+  author: idealista
+  company: Idealista S.A.U.
+  description: Haproxy Role
+  min_ansible_version: 2.9
+  license: Apache 2.0
+  galaxy-tags:
+    - haproxy
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - buster
